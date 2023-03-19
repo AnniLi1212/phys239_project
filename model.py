@@ -25,7 +25,7 @@ class CVNModel:
         self.num_classes = num_classes
 
     def create_network(self):
-        self.net.data = layers.Input(name='data path', shape=[2, 3, 224, 224])
+        self.net.data = layers.Input(name='data path', shape=[2, 3, 224, 224]) # do we use shape= self.input_shape ?
 
         self.net.conv1 = layers.Convolution(self.net.data, name='conv1', kernel_size=7, stride=2)
         self.net.pool1 = layers.Pooling(self.net.conv1, name='pool1', kernel_size=3, stride=2)  
@@ -34,13 +34,17 @@ class CVNModel:
         self.net.conv3 = layers.Convolution(self.net.conv2, name='conv3', kernel_size=3)
         self.net.lrn2 = layers.LRN(self.net.conv3, name='lrn2')
         self.net.pool2 = layers.Pooling(self.net.lrn2, name='pool2', kernel_size=3, stride=2)
-        # ADD INCEPTION MODULES -- see figure 1
-        self.net.inception1 = None
-        self.net.inception2 = None
-        self.net.pool3 = layers.Pooling(self.net.inception2, name='pool3', kernel_size = 3, stride=2)
-        # inception module
-        self.net.inception3 = None
-        self.net.pool4 = layers.Pooling(self.net.inception3, name='pool4', kernel_h=6, kernel_w=5, pool=AVE)
+        
+        #inception modules
+        self.net.inc1 = Inception_Module(self.net.pool2, 'inc1')
+        self.net.inc2 = Inception_Module(self.net.inc1, 'inc2')
+        
+        self.net.pool3 = layers.Pooling(self.net.inc2, name='pool3', kernel_size = 3, stride=2)
+        
+        # more inception modules
+        self.net.inc3 = Inception_Module(self.net.pool3, 'inc3')
+        
+        self.net.pool4 = layers.Pooling(self.net.inc3, name='pool4', kernel_h=6, kernel_w=5, pool='AVE')
         self.net.softmax = layers.softmax(self.net.pool4, name='softmax')
 
 class Inception_Module:
@@ -59,8 +63,9 @@ class Inception_Module:
 
 
         # TODO: how to implement filter concatenation? This will pull all branches together and give an output
-        self.output = layers.Concat(self.net.conv_a1, self.net.conv_b2, self.net.conv_c2, self.net.conv_d2)
-        ## not sure about this!
+
+        self.net.output = layers.Concat(self.net.conv_a1, self.net.conv_b2, self.net.conv_c2, self.net.conv_d2)
+
 
 
 # TODO: rewrite trainer
@@ -92,3 +97,41 @@ class Trainer:
             'snapshot_prefix': 'snapshot',
             'solver_mode': caffe.Solver.GPU
         }
+
+if __name__ == '__main__':
+    
+    from dataloader import load_MNIST
+    caffe.set_mode_cpu()
+    
+    # loading the data
+    x_train, y_train, x_test, y_test = load_MNIST()
+    
+    # instantiate model;
+    model = CVNModel(100, 2) #what does shape and nr of classes correspond to?
+    
+    train_data, train_labels = model.load_train_data()
+    
+    solver = model.get_solver()
+    
+    solver.solve()
+    
+    # save model, check if '*.caffemodel' syntax is correct
+    solver.net.save('trained_model.caffemodel')
+    
+    
+    '''
+    Testing
+    
+    this should go into it's own python script
+    '''
+    
+    # loading the saved model
+    net = caffe.Net(model.deploy_prototxt_path, 'trained_model.caffemodel', caffe.TEST)
+
+    # test the model
+    test_data, test_labels = model.load_test_data()
+    accuracy = model.test(net, test_data, test_labels)
+    print(f"Test accuracy: {accuracy * 100:.2f}%")
+    
+    
+    
