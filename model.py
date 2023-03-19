@@ -63,6 +63,7 @@ class Inception_Module:
 
 
         # TODO: how to implement filter concatenation? This will pull all branches together and give an output
+
         self.net.output = layers.Concat(self.net.conv_a1, self.net.conv_b2, self.net.conv_c2, self.net.conv_d2)
 
 
