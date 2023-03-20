@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torchvision import datasets, transforms
+from data_loader_2 import Data_Fetcher
 
 # TODO: check numbers in arguments
 class CNNModel(nn.Module):
@@ -126,7 +127,7 @@ class Trainer:
         
 # Load the dataset
 from torch.utils.data import Dataset, DataLoader
-
+'''
 class Data(Dataset):
     def __init__(self, X, y):
         self.X = X
@@ -137,9 +138,19 @@ class Data(Dataset):
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
+''' 
 
-train_dataset = Data(X_train, y_train)
-test_dataset = Data(X_test, y_test)
+
+#train_dataset = Data(X_train, y_train)
+#test_dataset = Data(X_test, y_test)
+
+#get data using Quinn's data loader 
+fetcher = Data_Fetcher()
+fetcher.get_data()
+
+train_dataset = fetcher.data_train
+test_dataset = fetcher.data_test
+
 
 train_loader = DataLoader(train_dataset, batch_size=100, shuffle=True, num_workers=2)
 test_loader = DataLoader(test_dataset, batch_size=100, shuffle=False, num_workers=2)
