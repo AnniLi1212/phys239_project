@@ -124,12 +124,28 @@ class Trainer:
         print('Accuracy: %d %%' % (100 * correct / total))
         
         
-# Load the dataset (MNIST)
-transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-train_set = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
-test_set = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=100, shuffle=True, num_workers=2)
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=False, num_workers=2)
+# Load the dataset
+from torch.utils.data import Dataset, DataLoader
+
+class Data(Dataset):
+    def __init__(self, X, y):
+        self.X = X
+        self.y = y
+
+    def __len__(self):
+        return len(self.X)
+
+    def __getitem__(self, idx):
+        return self.X[idx], self.y[idx]
+
+train_dataset = Data(X_train, y_train)
+test_dataset = Data(X_test, y_test)
+
+train_loader = DataLoader(train_dataset, batch_size=100, shuffle=True, num_workers=2)
+test_loader = DataLoader(test_dataset, batch_size=100, shuffle=False, num_workers=2)
+
+input_shape = X_train.shape[1:]
+num_classes = len(labels)
 
 # Set device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
