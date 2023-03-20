@@ -11,24 +11,25 @@ from torchvision import datasets, transforms
 
 # TODO: check numbers in arguments
 class CNNModel(nn.Module):
-    def __init__(self, input_shape, num_classes):
+    def __init__(self, input_shape):#, num_classes):
         super(CNNModel, self).__init__()
-        self.conv1 = nn.Conv2d(input_shape[1], 64, kernel_size=7, stride=2, padding=3)
+        print(input_shape)
+        self.conv1 = nn.Conv2d(input_shape[0], 64, kernel_size=7, stride=2, padding=3) #THIS MAY NOT BE CORRECT INPUT SHAPE
         self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.lrn1 = nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2)
         self.conv2 = nn.Conv2d(64, 64, kernel_size=1)
-        self.conv3 = nn.Conv2d(64, 192, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)  #64, 196
         self.lrn2 = nn.LocalResponseNorm(size=5, alpha=0.0001, beta=0.75, k=2)
         self.pool2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         
         # Inception modules
-        self.inc1 = Inception_Module(192, 'inc1')
+        self.inc1 = Inception_Module(64, 'inc1') #196
         self.inc2 = Inception_Module(256, 'inc2')
         
         self.pool3 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         
         # More inception modules
-        self.inc3 = Inception_Module(480, 'inc3')
+        self.inc3 = Inception_Module(256, 'inc3')  #THIS MAY NOT BE CORRECT INPUT SHAPE, recplaced 480->256
         
         self.pool4 = nn.AdaptiveAvgPool2d((1, 1))
         self.softmax = nn.Softmax(dim=1)
@@ -81,6 +82,7 @@ class Inception_Module(nn.Module):
 
         output = torch.cat((a1, b2, c2, d2), dim=1)
         return output
+    
 # Define the Trainer class
 class Trainer:
     def __init__(self, model, train_loader, test_loader, device):
@@ -133,7 +135,7 @@ test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=Fals
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Instantiate the model and trainer
-model = CNNModel()
+model = CNNModel(train_set[0][0].shape)
 trainer = Trainer(model, train_loader, test_loader, device)
 
 # Train and test the model
