@@ -10,6 +10,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 from data_loader_2 import Data_Fetcher
 
+
 # TODO: check numbers in arguments
 class CNNModel(nn.Module):
     def __init__(self, input_shape):#, num_classes):
@@ -147,24 +148,53 @@ class Data(Dataset):
 #get data using Quinn's data loader 
 fetcher = Data_Fetcher()
 fetcher.get_data()
-
+print(1)
 train_dataset = fetcher.data_train
 test_dataset = fetcher.data_test
 
-
+print(2)
 train_loader = DataLoader(train_dataset, batch_size=100, shuffle=True, num_workers=2)
 test_loader = DataLoader(test_dataset, batch_size=100, shuffle=False, num_workers=2)
+print(3)
+#pick the first data element to determine data shape 
+#train_data = train_dataset[0]
 
-input_shape = X_train.shape[1:]
-num_classes = len(labels)
+input_shape = fetcher.input_shape
+#num_classes = len(labels)
 
 # Set device
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Instantiate the model and trainer
-model = CNNModel(train_set[0][0].shape)
-trainer = Trainer(model, train_loader, test_loader, device)
+model = CNNModel(input_shape)
+print(4)
+optimizer = optim.SGD(self.model.parameters(), lr=0.001, momentum=0.9)
+criterion = nn.MSELoss()
+# Train the model
+for epoch in range(10):
+    for i, batch in enumerate(train_loader):
+        batch_ouput=None
+        batch_data=None
+        
+        # Zero the gradients
+        optimizer.zero_grad()
+        print(11)
+        # Forward pass
+        batch_output = model(batch_data)
+        perint(22)
+        # Compute the loss
+        loss = criterion(batch_output, batch_targets)
+        print(22)
+        # Backward pass and update the parameters
+        loss.backward()
+        optimizer.step()
+        
+        # Print progress
+        if i % 10 == 0:
+            print(f"Epoch {epoch}, Batch {i}, Loss {loss.item():.3f}")
+
+#trainer = Trainer(model, train_loader, test_loader, device)
 
 # Train and test the model
-trainer.train(epochs=10, learning_rate=0.001)
-trainer.test()
+#trainer.train(epochs=10, learning_rate=0.001)
+#trainer.test()
