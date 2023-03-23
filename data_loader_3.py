@@ -48,7 +48,7 @@ class Data_Fetcher():
 
         # load feature arrays
         for (i, feat) in enumerate(features):
-            ak_array = ak.from_iter(getattr(h5file.root, feat)[:])
+            ak_array = ak.from_iter(getattr(h5file.root, feat)[:]) #couldnt fix the dymensions of this
             feature_array[:, i] = utils.to_np_array(ak_array, max_n=100, pad=0)
 
         # load spectator arrays
